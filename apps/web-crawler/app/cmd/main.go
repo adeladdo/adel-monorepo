@@ -60,6 +60,7 @@ func run(ctx context.Context, cfg *config.Config) {
 	fmt.Printf("Host:     %s\n", cfg.StartURL.Host)
 	fmt.Printf("Depth:    %d\n", cfg.MaxDepth)
 	fmt.Printf("Workers:  %d\n", cfg.Workers)
+	fmt.Printf("Buffer:  %d\n", cfg.TaskQueueBuffer)
 	fmt.Println("==============================================")
 
 	startTime := time.Now()
@@ -73,6 +74,12 @@ func run(ctx context.Context, cfg *config.Config) {
 
 	stats, err := frontierStore.Stats(ctx, site.ID)
 	if err == nil {
+		fmt.Println("==============================================")
+		fmt.Printf("URL:      %s\n", cfg.StartURL.String())
+		fmt.Printf("Host:     %s\n", cfg.StartURL.Host)
+		fmt.Printf("Depth:    %d\n", cfg.MaxDepth)
+		fmt.Printf("Workers:  %d\n", cfg.Workers)
+		fmt.Printf("Buffer:  %d\n", cfg.TaskQueueBuffer)
 		fmt.Println("==============================================")
 		fmt.Println(" WEB-CRAWLER STATS")
 		fmt.Println("==============================================")

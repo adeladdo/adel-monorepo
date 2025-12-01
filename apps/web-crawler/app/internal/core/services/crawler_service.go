@@ -116,6 +116,8 @@ func (s *CrawlerService) runWorkerPool(ctx context.Context, site domain.Site) er
 }
 
 func (s *CrawlerService) workerLoop(ctx context.Context, site domain.Site, id int, taskChan <-chan domain.CrawlTask) {
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
 
 	s.logger.Debug("worker started", slog.Int("worker_id", id))
 	for {
@@ -126,6 +128,14 @@ func (s *CrawlerService) workerLoop(ctx context.Context, site domain.Site, id in
 				return
 			}
 			s.processTask(ctx, site, task)
+
+		case <-ticker.C:
+			stats, err := s.frontierStore.Stats(ctx, site.ID)
+			if err == nil && stats.QueueSize == 0 {
+				s.logger.Debug("worker exiting: no pending work", slog.Int("worker_id", id))
+				return
+			}
+
 		case <-ctx.Done():
 			s.logger.Debug("worker cancelled: context closed", slog.Int("worker_id", id))
 			return
@@ -148,7 +158,7 @@ func (s *CrawlerService) processTask(ctx context.Context, site domain.Site, task
 	// Fetch the page
 	response, err := s.httpClient.Fetch(ctx, task.URL)
 	if err != nil {
-		s.handleTaskFailure(ctx, task, fmt.Errorf("failed to fetch url: %s", task.URL))
+		s.handleTaskFailure(ctx, task, fmt.Errorf("failed to fetch url: %s ", err.Error()))
 		return
 	}
 
@@ -175,7 +185,7 @@ func (s *CrawlerService) processTask(ctx context.Context, site domain.Site, task
 	baseURL, err := url.Parse(task.URL)
 	if err != nil {
 		fmt.Printf("\n \u2705 Visited: %s\n", task.URL)
-		s.handleTaskFailure(ctx, task, fmt.Errorf("failed to parse url: %s", task.URL))
+		s.handleTaskFailure(ctx, task, fmt.Errorf("failed to parse url: %s", err.Error()))
 		return
 	}
 

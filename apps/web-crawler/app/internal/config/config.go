@@ -19,7 +19,7 @@ type Config struct {
 }
 
 func Load(ctx context.Context) (*Config, error) {
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Overload(); err != nil {
 		log.Println("No .env file found, continuing...")
 	}
 
